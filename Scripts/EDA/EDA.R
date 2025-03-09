@@ -183,6 +183,8 @@ corrplot(cor_matrix,
          tl.cex = 0.8,              
          method = "ellipse",        
          addCoef.col = "black",      
-         number.cex = 0.9)           
+         number.cex = 0.9) 
+  
+saveRDS(heart_failure_clean,file = "heart_failure_clean.rds")
 
 
