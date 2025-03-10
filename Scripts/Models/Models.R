@@ -319,10 +319,17 @@ model_metric_clean %>%
 # Define a BO control
 control_bo <- control_bayes(verbose = TRUE)
 
-# Execute a BO
-
-models_bo <-
-  
+# Execute a BO on the Random Forest Model
+models_bo <- 
+  rf_workflow %>%
+  tune_bayes(
+    resamples = cell_folds,
+    initial = rf_initial,
+    param_info = rf_param,
+    metrics = roc_res,
+    iter = 20,
+    control = control_bo
+  )
 
 
 
