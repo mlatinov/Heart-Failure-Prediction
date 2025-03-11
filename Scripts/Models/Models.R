@@ -3,6 +3,7 @@
 library(tidymodels)
 library(modeldata)
 library(themis)
+library(finetune)
 
 tidymodels_prefer()
 
@@ -135,7 +136,6 @@ knn_param <-
   update(neighbors = neighbors(c(1L,20L)))
 
 # Set parameters XGB
-n_samples <- nrow(heart_failure_train)  # Get the number of rows in dataset
 
 xgb_param <- 
   xgb_workflow %>%
@@ -302,10 +302,11 @@ model_metric_clean %>%
   geom_col() +
   scale_fill_viridis_d() +  
   coord_flip() + 
-  labs(title = "Model Performance Comparison",
-       x = "Models",
-       y = "AUC Value",
-       fill = "Models") +
+  labs(
+    title = "Model Performance Comparison",
+    x = "Models",
+    y = "AUC Value",
+    fill = "Models") +
   theme_minimal()+
   theme(
     strip.text = element_text(size = 12),
@@ -331,7 +332,22 @@ models_bo <-
     control = control_bo
   )
 
+#### Simulated Annealing ####
 
+# Define a SA control
+control_sa <- control_sim_anneal(verbose = TRUE)
+
+# Execute SA 
+models_sa <- 
+  rf_workflow %>%
+  tune_sim_anneal(
+    resamples = cell_folds,
+    initial = rf_initial,
+    param_info = rf_param,
+    metrics = roc_res,
+    iter = 20,
+    control = control_sa
+  )
 
 
 
