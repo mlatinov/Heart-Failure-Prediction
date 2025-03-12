@@ -4,6 +4,8 @@ library(tidymodels)
 library(modeldata)
 library(themis)
 library(finetune)
+library(DALEXtra)
+library(ROCR)
 
 tidymodels_prefer()
 
@@ -332,6 +334,15 @@ models_bo <-
     control = control_bo
   )
 
+# Extract the best model
+model_best_rf <- select_best(models_bo,metric = "roc_auc")
+
+# Finalize the workflow with the best params
+final_bo_rf_workflow <- finalize_workflow(rf_workflow,model_best_rf)
+
+# Fit the model 
+final_rf_model <- fit(final_bo_rf_workflow,heart_failure_train)
+
 #### Simulated Annealing ####
 
 # Define a SA control
@@ -348,6 +359,83 @@ models_sa <-
     iter = 20,
     control = control_sa
   )
+
+#### Model Evaluation ####
+
+## Predict on the testing set 
+prediction <- predict(final_rf_model,new_data = heart_failure_test,type = "prob")
+
+## Take the prob of the pos class
+prediction_pos <- prediction$.pred_0
+
+# Combine the actual prediction with the prob of the pos class
+data <- tibble(
+  truth = heart_failure_test$death, 
+  .pred = prediction_pos  
+)
+
+# Compute the ROC curve
+roc_result <- roc_curve(data, truth ,.pred)
+
+## Plot the ROC
+ggplot(roc_result, aes(x = 1 - specificity, y = sensitivity)) + 
+  geom_line(color = "blue") + 
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "red") +  # Diagonal line
+  labs(x = "False Positive Rate", y = "True Positive Rate", title = "ROC Curve") +
+  theme_minimal()
+
+#### Feature Importance ####
+
+# Create a vector of features 
+vip_features <- c("age","anaemia","creatinine_phosphokinase","diabetes","ejection_fraction","high_blood_pressure",
+                  "platelets","serum_creatinine","serum_sodium","sex","smoking","time")
+
+# Select of the features from the training set
+vip_train <- heart_failure_train %>%
+  select(all_of(vip_features))
+
+# Create explainer 
+explainer_rf <-
+  explain_tidymodels(
+    model = final_rf_model,
+    data = vip_train,
+    y = as.numeric(as.character(heart_failure_train$death)),
+    verbose = FALSE
+    )
+
+## Local Explanations 
+
+# Get 1000 obs from the vip_train
+observations <- vip_train[1000,]
+
+# Break down the obs importance 
+rf_break_down <- predict_parts(
+  explainer = explainer_rf,
+  new_observation = observations,
+  type = "shap",
+  B = 20
+  )
+
+# Plot the Importance 
+rf_break_down %>%
+  group_by(variable) %>%
+  mutate(mean_val = mean(contribution)) %>%
+  ungroup() %>%
+  mutate(variable = fct_reorder(variable, abs(mean_val))) %>%
+  ggplot(aes(contribution, variable, fill = mean_val > 0)) +
+  geom_boxplot(width = 0.5) +
+  theme_minimal()+
+  scale_fill_viridis_d(option = "magma") +
+  labs(
+    y = "Feature Importance",
+    x = "Contribution",
+    title = "SHAP Local Interpretations")+
+  theme(legend.position = "none")
+
+## Global Explanations 
+vip_global_rf <- model_parts(explainer = explainer_rf)
+
+plot(vip_global_rf)
 
 
 
