@@ -26,7 +26,7 @@ Dataset & Methodology
 
 📌 Dataset: Contains 12 features related to heart failure risk factors, including diabetes and serum creatinine levels.
 
-📌 Machine Learning Framework: Tidymodels, a powerful and flexible ML package in R.
+📌 Machine Learning Framework: Tidymodels
 
 📌 Models Used:
 
@@ -44,10 +44,8 @@ Why This Matters
 
 Early detection of high-risk patients allows for timely medical intervention, ultimately reducing preventable deaths. By applying machine learning, we aim to enhance cardiovascular risk assessment and improve clinical decision-making.
 
-Citation
-
-Davide Chicco, Giuseppe Jurman: Machine learning can predict survival of patients with heart failure from serum creatinine and ejection fraction alone. BMC Medical Informatics and Decision Making 20, 16 (2020).
-Link : https://bmcmedinformdecismak.biomedcentral.com/articles/10.1186/s12911-020-1023-5
+Citation:
+Heart Failure Clinical Records. (2020). UCI Machine Learning Repository. https://doi.org/10.24432/C5Z89R.
 
 
 
